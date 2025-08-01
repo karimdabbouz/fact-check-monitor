@@ -9,15 +9,26 @@ from news_scraper.news_scraper.scraper import ArticleLinkScraper
 
 
 def main():
-    # Minimal test: instantiate and run ArticleLinkScraper for a public RSS feed
+    # RSS
+    # article_link_scraper = ArticleLinkScraper(
+    #     scraping_mode='RSS',
+    #     selenium_settings={
+    #         'mode': 'uc',
+    #         'headed': True,
+    #         'proxy': None
+    #     },
+    #     urls=['https://www.nius.de/rss'],
+    #     article_url_selector=None
+    # )
+    # API
     article_link_scraper = ArticleLinkScraper(
-        scraping_mode='RSS',
+        scraping_mode='API',
         selenium_settings={
             'mode': 'uc',
             'headed': True,
             'proxy': None
         },
-        urls=['https://www.nius.de/rss'],
+        urls=['https://correctiv.org/wp-json/wp/v2/posts?categories=5&per_page=5'],
         article_url_selector=None
     )
     try:
