@@ -24,12 +24,12 @@ def main():
     article_link_scraper = ArticleLinkScraper(
         scraping_mode='API',
         selenium_settings={
-            'mode': 'uc',
+            'mode': 'wire',
             'headed': True,
             'proxy': None
         },
         urls=['https://correctiv.org/wp-json/wp/v2/posts?categories=5&per_page=5'],
-        article_url_selector=None
+        article_url_selector=lambda x: [entry['link'] for entry in x]
     )
     try:
         links = article_link_scraper.run()
