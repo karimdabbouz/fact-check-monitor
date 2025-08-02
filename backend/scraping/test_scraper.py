@@ -39,7 +39,8 @@ def main():
         subheadlines_selector=('//div[@class="detail__content"]/h2', True, lambda element: [x.text for x in element])
     )
     articles = article_content_scraper.run()
-    print(articles)
+    print(f'Scraped {len(articles)} articles.')
+    
     # RSS
     # article_link_scraper = ArticleLinkScraper(
     #     scraping_mode='RSS',

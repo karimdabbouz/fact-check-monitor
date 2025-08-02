@@ -18,11 +18,14 @@ class FactCheckArticlesSchema(BaseModel):
     '''
     id: int = None
     url: str = None
-    source: str = None
+    medium: str = None
+    category: str = None
+    author: str = None
     kicker: str = None
     headline: str = None
     teaser: str = None
     body: Body = None
+    image_url: str = None
     published_at: datetime.datetime = None
     llm_generated_topic: str = None
     topic: str = None
