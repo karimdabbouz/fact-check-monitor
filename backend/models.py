@@ -19,7 +19,7 @@ class FactCheckArticles(Base):
     headline = Column(String)
     teaser = Column(String)
     body = Column(JSONB)
-    image_url = Column(str)
+    image_url = Column(String)
     published_at = Column(DateTime)
     llm_generated_topic = Column(String)
     topic = Column(String)
