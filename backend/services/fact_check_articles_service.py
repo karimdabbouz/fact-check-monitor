@@ -54,3 +54,17 @@ class FactCheckArticlesService:
         article_objs = [FactCheckArticles(**article.model_dump(exclude_unset=True)) for article in new_articles]
         self.db_session.bulk_save_objects(article_objs)
         self.db_session.commit()
+
+
+    def get_missing_urls(self, urls: List[str]) -> List[str]:
+        '''
+        Given a list of URLs, return only those that are not already present in the database.
+        '''
+        if not urls:
+            return []
+        existing_urls = set(
+            url for (url,) in self.db_session.query(FactCheckArticles.url)
+            .filter(FactCheckArticles.url.in_(urls))
+            .all()
+        )
+        return [url for url in urls if url not in existing_urls]
