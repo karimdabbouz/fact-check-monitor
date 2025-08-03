@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
@@ -9,6 +9,7 @@ Base = declarative_base()
 
 class FactCheckArticles(Base):
     __tablename__ = 'fact_check_articles'
+    __table_args__ = (UniqueConstraint('url', name='constraint_fact_check_articles'))
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     url = Column(String, nullable=False)

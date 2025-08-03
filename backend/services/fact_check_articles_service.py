@@ -1,5 +1,11 @@
-from backend.schemas import FactCheckArticlesSchema
-from backend.models import FactCheckArticles
+import sys
+from pathlib import Path
+
+project_root = str(Path(__file__).parent.parent)
+sys.path.append(project_root)
+
+from schemas import FactCheckArticlesSchema
+from models import FactCheckArticles
 from typing import List, Dict, Any, Optional
 
 
@@ -33,10 +39,18 @@ class FactCheckArticlesService:
         pass
 
 
-    def save_articles(self, articles: List[FactCheckArticlesSchema]) -> None:
+    def save_articles(self, articles: List[FactCheckArticlesSchema]):
         '''
-        Bulk insert a list of FactCheckArticlesSchema objects into the database.
+        Bulk insert a list of FactCheckArticlesSchema objects into the database,
+        skipping articles whose URLs already exist.
         '''
-        article_objs = [FactCheckArticles(**article.model_dump(exclude_unset=True)) for article in articles]
+        urls = [article.url for article in articles if article.url]
+        existing_urls = set(
+            url for (url,) in self.db_session.query(FactCheckArticles.url)
+            .filter(FactCheckArticles.url.in_(urls))
+            .all()
+        )
+        new_articles = [article for article in articles if article.url not in existing_urls]
+        article_objs = [FactCheckArticles(**article.model_dump(exclude_unset=True)) for article in new_articles]
         self.db_session.bulk_save_objects(article_objs)
         self.db_session.commit()

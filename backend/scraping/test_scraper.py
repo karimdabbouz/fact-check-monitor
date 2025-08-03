@@ -8,6 +8,7 @@ sys.path.append(project_root)
 
 from news_scraper.news_scraper.scraper import ArticleLinkScraper, ArticleContentScraper
 from schemas import FactCheckArticlesSchema
+from services.fact_check_articles_service import FactCheckArticlesService
 
 
 def close_cookie_consent_correctiv(driver):
@@ -41,8 +42,8 @@ def main():
         body_structured_selector=('//div[@class="detail__content"]/p | //div[@class="detail__content"]/h2', True, lambda element: [('subheadline', x.text) if x.tag_name == 'h2' else ('paragraph', x.text) for x in element])
     )
     articles = article_content_scraper.run()
-    articles_obj = FactCheckArticlesSchema.from_news_scraper(articles[0])
-    print(articles_obj)
+    articles_objects = [FactCheckArticlesSchema.from_news_scraper(x) for x in articles]
+    print(articles_objects)
     
     # RSS
     # article_link_scraper = ArticleLinkScraper(
