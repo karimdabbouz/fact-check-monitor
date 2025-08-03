@@ -9,6 +9,7 @@ sys.path.append(project_root)
 from news_scraper.news_scraper.scraper import ArticleLinkScraper, ArticleContentScraper
 from schemas import FactCheckArticlesSchema
 from services.fact_check_articles_service import FactCheckArticlesService
+from database import Database
 
 
 def close_cookie_consent_correctiv(driver):
@@ -43,7 +44,10 @@ def main():
     )
     articles = article_content_scraper.run()
     articles_objects = [FactCheckArticlesSchema.from_news_scraper(x) for x in articles]
-    print(articles_objects)
+    db = Database()
+    with db.get_session() as session:
+        fact_check_articles_service = FactCheckArticlesService(session)
+        fact_check_articles_service.save_articles(articles_objects)
     
     # RSS
     # article_link_scraper = ArticleLinkScraper(

@@ -51,6 +51,8 @@ class FactCheckArticlesSchema(BaseModel):
                     )
                 body.append(body_block)
             article['body'] = body
+        if 'datetime_published' in article:
+            article['published_at'] = article['datetime_published']
         return cls(**article)
 
     class Config:

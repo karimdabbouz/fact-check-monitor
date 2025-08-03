@@ -1,8 +1,14 @@
+import sys
+from pathlib import Path
+
+project_root = str(Path(__file__).parent)
+sys.path.append(project_root)
+
 from contextlib import contextmanager
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-from .models import Base
+from models import Base
 import os
 from dotenv import load_dotenv
 
