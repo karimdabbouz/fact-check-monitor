@@ -21,6 +21,21 @@ def close_cookie_consent_correctiv(driver):
 
 
 def main():
+    # Get links
+    article_link_scraper = ArticleLinkScraper(
+        scraping_mode='API',
+        selenium_settings={
+            'mode': 'wire',
+            'headed': True,
+            'proxy': None
+        },
+        urls=['https://correctiv.org/wp-json/wp/v2/posts?categories=5&per_page=3'],
+        article_url_selector=lambda x: [entry['link'] for entry in x]
+    )
+    links = article_link_scraper.run()
+    print(f'Number of links: {len(links)}')
+
+    # Use links to scrape content
     article_content_scraper = ArticleContentScraper(
         scraping_mode='FRONTEND',
         selenium_settings={
@@ -28,7 +43,7 @@ def main():
             'headed': True,
             'proxy': None
         },
-        link_list=['https://correctiv.org/faktencheck/2025/08/01/berliner-oepnv-was-tatsaechlich-rund-um-pfefferspray-gilt-auf1-waffenverbot/'],
+        link_list=links,
         medium='correctiv',
         pre_hooks=[lambda driver: close_cookie_consent_correctiv(driver)],
         datetime_published_selector=('//time', False, lambda element: datetime.datetime.strptime(element.get_attribute('datetime').split('+')[0], '%Y-%m-%dT%H:%M:%S') - datetime.timedelta(hours=(lambda: 2 if datetime.datetime.now(ZoneInfo('Europe/Brussels')).dst() != datetime.timedelta(0) else 1)())),
@@ -43,6 +58,9 @@ def main():
         body_structured_selector=('//div[@class="detail__content"]/p | //div[@class="detail__content"]/h2', True, lambda element: [('subheadline', x.text) if x.tag_name == 'h2' else ('paragraph', x.text) for x in element])
     )
     articles = article_content_scraper.run()
+    print(f'Number of articles scraped: {len(articles)}')
+
+    # Save content to db
     articles_objects = [FactCheckArticlesSchema.from_news_scraper(x) for x in articles]
     db = Database()
     with db.get_session() as session:
@@ -76,7 +94,6 @@ def main():
     #     print(f"{len(links)} found")
     # except Exception as e:
     #     print(f"ArticleLinkScraper raised an exception: {e}")
-    pass
 
 if __name__ == "__main__":
     main()
