@@ -7,6 +7,7 @@ project_root = str(Path(__file__).parent.parent)
 sys.path.append(project_root)
 
 from news_scraper.news_scraper.scraper import ArticleLinkScraper, ArticleContentScraper
+from schemas import FactCheckArticlesSchema
 
 
 def close_cookie_consent_correctiv(driver):
@@ -30,16 +31,18 @@ def main():
         pre_hooks=[lambda driver: close_cookie_consent_correctiv(driver)],
         datetime_published_selector=('//time', False, lambda element: datetime.datetime.strptime(element.get_attribute('datetime').split('+')[0], '%Y-%m-%dT%H:%M:%S') - datetime.timedelta(hours=(lambda: 2 if datetime.datetime.now(ZoneInfo('Europe/Brussels')).dst() != datetime.timedelta(0) else 1)())),
         # post_hooks=[lambda driver, article_data: parse_factcheck_data(driver, article_data), lambda driver, article_data: parse_category(driver, article_data)],
-        # author_selector=('//p[@class="detail__authors"]', False, lambda element: element.text.replace('von ', '')),
+        author_selector=('//p[@class="detail__authors"]', False, lambda element: element.text.replace('von ', '')),
         image_url_selector=('//article//source', False, lambda element: element.get_attribute('srcset')),
         kicker_selector=('//header/span[@class="topline"]', False, lambda element: element.text),
         headline_selector=('//header/h1', False, lambda element: element.text),
         teaser_selector=('//header/p[@class="detail__excerpt"]', False, lambda element: element.text),
         body_selector=('//div[@class="detail__content"]/p', True, lambda element: [x.text for x in element if 'Alle Faktenchecks zu' not in x.text and 'Redigatur:' not in x.text]),
-        subheadlines_selector=('//div[@class="detail__content"]/h2', True, lambda element: [x.text for x in element])
+        subheadlines_selector=('//div[@class="detail__content"]/h2', True, lambda element: [x.text for x in element]),
+        body_structured_selector=('//div[@class="detail__content"]/p | //div[@class="detail__content"]/h2', True, lambda element: [('subheadline', x.text) if x.tag_name == 'h2' else ('paragraph', x.text) for x in element])
     )
     articles = article_content_scraper.run()
-    print(f'Scraped {len(articles)} articles.')
+    articles_obj = FactCheckArticlesSchema.from_news_scraper(articles[0])
+    print(articles_obj)
     
     # RSS
     # article_link_scraper = ArticleLinkScraper(
