@@ -4,8 +4,8 @@ from pathlib import Path
 project_root = str(Path(__file__).parent.parent)
 sys.path.append(project_root)
 
-from schemas import FactCheckArticlesSchema
-from models import FactCheckArticles
+from shared.schemas import FactCheckArticlesSchema
+from shared.models import FactCheckArticles
 from typing import List, Dict, Any, Optional
 
 

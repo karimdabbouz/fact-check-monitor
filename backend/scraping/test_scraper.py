@@ -7,9 +7,9 @@ project_root = str(Path(__file__).parent.parent)
 sys.path.append(project_root)
 
 from news_scraper.news_scraper.scraper import ArticleLinkScraper, ArticleContentScraper
-from schemas import FactCheckArticlesSchema
-from services.fact_check_articles_service import FactCheckArticlesService
-from database import Database
+from shared.schemas import FactCheckArticlesSchema
+from shared.services.fact_check_articles_service import FactCheckArticlesService
+from shared.database import Database
 
 
 def close_cookie_consent_correctiv(driver):
