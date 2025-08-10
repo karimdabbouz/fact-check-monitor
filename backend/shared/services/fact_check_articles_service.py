@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import datetime
 
 project_root = str(Path(__file__).parent.parent)
 sys.path.append(project_root)
@@ -34,9 +35,28 @@ class FactCheckArticlesService:
         pass
 
 
-    def list_articles(self, limit: int = 100, offset: int = 0) -> List[FactCheckArticles]:
-        '''List FactCheckArticles with pagination.'''
-        pass
+    def get_articles(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+        medium: Optional[str] = None,
+        topic: Optional[str] = None,
+        published_after: Optional[datetime.datetime] = None,
+        published_before: Optional[datetime.datetime] = None,
+    ) -> List[FactCheckArticles]:
+        '''
+        Retrieve articles with optional filtering by medium, topic, and published_at date range, with pagination.
+        '''
+        query = self.db_session.query(FactCheckArticles)
+        if medium:
+            query = query.filter(FactCheckArticles.medium == medium)
+        if topic:
+            query = query.filter(FactCheckArticles.topic == topic)
+        if published_after:
+            query = query.filter(FactCheckArticles.published_at >= published_after)
+        if published_before:
+            query = query.filter(FactCheckArticles.published_at <= published_before)
+        return query.order_by(FactCheckArticles.id).offset(offset).limit(limit).all()
 
 
     def save_articles(self, articles: List[FactCheckArticlesSchema]):
