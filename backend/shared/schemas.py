@@ -57,3 +57,21 @@ class FactCheckArticlesSchema(BaseModel):
 
     class Config:
         extra = 'ignore'
+
+
+class FactCheckArticleContent(BaseModel):
+    '''
+    This is what is passed into the LLM to determine the topic of an article.
+    '''
+    kicker: Optional[str] = None
+    headline: Optional[str] = None
+    teaser: Optional[str] = None
+    body: List[BodyBlock]
+
+
+class LLMGeneratedTopic(BaseModel):
+    '''
+    The topic label created by the unsupervised TopicGenerator.
+    '''
+    article_id: int
+    topic_label: str

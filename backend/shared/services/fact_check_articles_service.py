@@ -20,14 +20,26 @@ class FactCheckArticlesService:
         self.db_session = db_session
 
 
-    def get_article(self, article_id: int) -> Optional[FactCheckArticles]:
+    def get_article(self, article_id: int) -> Optional[FactCheckArticlesSchema]:
         '''Retrieve a FactCheckArticle by ID.'''
-        pass
+        article = self.db_session.query(FactCheckArticles).filter_by(id=article_id).first()
+        if not article:
+            return None
+        return article
 
 
-    def update_article(self, article_id: int, update_data: Dict[str, Any]) -> Optional[FactCheckArticles]:
-        '''Update an existing FactCheckArticle.'''
-        pass
+    def update_article(self, article_id: int, update_data: Dict[str, Any]) -> Optional[FactCheckArticlesSchema]:
+        '''Update an existing FactCheckArticle with the provided fields.'''
+        article = self.db_session.query(FactCheckArticles).filter_by(id=article_id).first()
+        if not article:
+            return None
+        for key, value in update_data.items():
+            if key == 'id':
+                continue
+            if hasattr(article, key):
+                setattr(article, key, value)
+        self.db_session.commit()
+        return article
 
 
     def delete_article(self, article_id: int) -> bool:
@@ -43,7 +55,7 @@ class FactCheckArticlesService:
         topic: Optional[str] = None,
         published_after: Optional[datetime.datetime] = None,
         published_before: Optional[datetime.datetime] = None,
-    ) -> List[FactCheckArticles]:
+    ) -> List[FactCheckArticlesSchema]:
         '''
         Retrieve articles with optional filtering by medium, topic, and published_at date range, with pagination.
         '''

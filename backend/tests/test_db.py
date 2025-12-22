@@ -31,4 +31,4 @@ def main():
                 print(f"ID: {a.id}, Headline: {a.headline}, Body: {str(a.body)[:80]}...")
 
 if __name__ == "__main__":
-    main() 
+    main()
