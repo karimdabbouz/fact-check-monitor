@@ -58,5 +58,5 @@ class TopicGeneratorAgent():
         '''
         Runs the agent on one article of type LLMGeneratedTopic.
         '''
-        response = await self.agent.run(article_content)
+        response = await self.agent.run(article_content.model_dump_json())
         return response.output
