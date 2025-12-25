@@ -29,8 +29,10 @@ class FactCheckArticlesSchema(BaseModel):
     body: List[BodyBlock] = None
     image_url: Optional[str] = None
     published_at: Optional[datetime.datetime] = None
-    llm_generated_topic: Optional[str] = None
     topic: Optional[str] = None
+    claim: Optional[str] = None
+    instrumentalizer: Optional[str] = None
+    entities: Optional[List[Dict[str, Any]]] = None
     last_updated: datetime.datetime = None
 
     @classmethod
