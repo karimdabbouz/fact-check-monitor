@@ -22,7 +22,7 @@ async def generate_topics_for_sample(sample_size: int = 100):
     db = Database()
     topic_generator = TopicGeneratorAgent(
         # model_name='mistralai/devstral-2512:free' # Or your preferred model
-        model_name='anthropic/claude-sonnet-4.5'
+        model_name='anthropic/claude-haiku-4.5'
     )
     output_file = "llm_generated_topics_sample.csv"
     existing_processed_ids = set()
@@ -134,4 +134,4 @@ async def generate_topics_for_sample(sample_size: int = 100):
 
 
 if __name__ == '__main__':
-    asyncio.run(generate_topics_for_sample(sample_size=60))
+    asyncio.run(generate_topics_for_sample(sample_size=30))
