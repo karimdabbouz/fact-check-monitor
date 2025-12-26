@@ -74,6 +74,27 @@ class FactCheckArticleContent(BaseModel):
 class LLMGeneratedTopic(BaseModel):
     '''
     The topic label created by the unsupervised TopicGenerator.
+    (This is from the first test where we used an LLM to create the topic labels in an unsupervised way)
     '''
     article_id: int
     topic_label: str
+
+
+class Topic(BaseModel):
+    '''
+    This is the supervised topic label created by the TopicClassifier and stored in the
+    topic column.
+    '''
+    topic_label: Literal[
+        'Demokratie & Wahlen',
+        'Politik & Regierung',
+        'Medien & Öffentlichkeit',
+        'Umwelt & Klima',
+        'Migration & Asyl',
+        'Gesundheit',
+        'Krieg & Konflikte',
+        'Kriminalität & Sicherheit',
+        'Technologie',
+        'Wirtschaft & Soziales',
+        'Verbraucherthemen'
+    ]
