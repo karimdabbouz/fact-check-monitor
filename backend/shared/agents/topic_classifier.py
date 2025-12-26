@@ -1,12 +1,8 @@
-import os, sys
-from pathlib import Path
+import os
 from typing import Optional
 from pydantic_ai.agent import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openrouter import OpenRouterProvider
-
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
 
 from shared.schemas import FactCheckArticleContent, Topic
 
@@ -21,7 +17,7 @@ class TopicClassifierAgent():
         model_name: str,
         system_prompt: Optional[str] = None
     ):
-        self.model_name = model_name if model_name else 'mistralai/mistral-large-24b-instruct:free'
+        self.model_name = model_name if model_name else 'mistralai/devstral-2512:free'
         self.system_prompt = system_prompt if system_prompt else self._load_system_prompt()
         self.agent = self._create_agent()
 
@@ -30,8 +26,7 @@ class TopicClassifierAgent():
         '''
         Load the system prompt from the system_prompts directory.
         '''
-        path = project_root / 'system_prompts' / 'system_prompt_topic_classifier.md'
-        with open(path, 'r') as f:
+        with open('shared/system_prompts/system_prompt_topic_classifier.md', 'r') as f:
             return f.read()
 
 
