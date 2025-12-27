@@ -1,50 +1,42 @@
-
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
 import sys
 from pathlib import Path
 import os
 
-# Add the project root to the sys.path to import shared modules
-# Add the project's main root to sys.path for absolute imports
-project_root = Path(__file__).resolve().parents[2] # Go up to fact-check-monitor/
-sys.path.insert(0, str(project_root))
-
-from backend.shared.database import Database
-from backend.shared.models import FactCheckArticles
+# Add the project root to sys.path for absolute imports
+python_project_root = Path(__file__).resolve().parent.parent
+if str(python_project_root) not in sys.path:
+    sys.path.insert(0, str(python_project_root))
 
 # --- Streamlit App --- #
-st.set_page_config(layout="wide")
-st.title("Fact-Checking Topic Observatory - Data Explorer")
+st.set_page_config(layout="wide", page_title="Fact-Checking Topic Observatory")
+st.title("Fact-Checking Topic Observatory")
 
-@st.cache_data(ttl=600) # Cache data for 10 minutes
-def load_data():
-    db = Database()
-    with db.get_session() as session:
-        articles = session.query(FactCheckArticles).all()
-        df = pd.DataFrame([article.__dict__ for article in articles])
-        # Drop SQLAlchemy internal state attribute
-        if '_s-instance_state' in df.columns:
-            df = df.drop(columns=['_s-instance_state'])
+# Define the path to the CSV file
+csv_file = "topic_classification_test.csv"
+
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def load_csv_data(csv_path):
+    """Load data from the CSV file."""
+    if os.path.exists(csv_path):
+        df = pd.read_csv(csv_path)
+        df['published_at'] = pd.to_datetime(df['published_at'])
         return df
+    else:
+        return pd.DataFrame()
 
-df = load_data()
+# Load data
+df = load_csv_data(csv_file)
 
 if df.empty:
-    st.warning("No fact-check articles found in the database. Please run the scrapers.")
+    st.warning(f"CSV file '{csv_file}' not found or is empty. Please run `build_topic_classification_csv.py` to generate the data.")
 else:
-    st.success(f"Loaded {len(df)} articles from the database.")
+    st.success(f"Loaded {len(df)} articles from {csv_file}")
 
-    # Convert datetime columns
-    df['published_at'] = pd.to_datetime(df['published_at'])
-
-    # Sidebar for filters
+    # --- Sidebar Filters --- #
     st.sidebar.header("Filters")
-
-    # Medium filter
-    all_mediums = ['All'] + sorted(df['medium'].unique().tolist())
-    selected_medium = st.sidebar.selectbox("Select Medium", all_mediums)
 
     # Date range filter
     min_date = df['published_at'].min().date()
@@ -62,33 +54,69 @@ else:
     else:
         filtered_df = df.copy()
 
-    if selected_medium != 'All':
-        filtered_df = filtered_df[filtered_df['medium'] == selected_medium]
+    # --- Summary Statistics --- #
+    total_articles = len(filtered_df)
+    st.markdown(f"### 📊 Summary for {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+    st.metric("Total Fact-Checks", total_articles)
 
-    st.subheader("Filtered Articles Data")
-    st.dataframe(filtered_df[['headline', 'medium', 'published_at', 'llm_generated_topic', 'topic', 'url']])
-
-    # --- Visualizations --- #
-    st.subheader("Publication Frequency Over Time")
-    if not filtered_df.empty:
-        freq_df = filtered_df.groupby(pd.Grouper(key='published_at', freq='W')).size().reset_index(name='count')
-        fig_freq = px.line(freq_df, x='published_at', y='count', title='Articles Published Per Week')
-        st.plotly_chart(fig_freq, use_container_width=True)
+    # --- Bubble Chart --- #
+    if not filtered_df.empty and filtered_df['topic'].notna().sum() > 0:
+        # Aggregate by topic
+        topic_data = filtered_df[filtered_df['topic'].notna()].groupby('topic').size().reset_index(name='count')
+        
+        if not topic_data.empty:
+            # Calculate percentages
+            topic_data['percentage'] = (topic_data['count'] / topic_data['count'].sum() * 100).round(1)
+            
+            # Create bubble chart using scatter plot
+            # Position bubbles in a grid-like pattern for better visualization
+            num_topics = len(topic_data)
+            
+            # Sort by count ascending for horizontal bar chart (bottom to top)
+            topic_data = topic_data.sort_values(by='count', ascending=True).reset_index(drop=True)
+            
+            # Create the bar chart
+            fig = go.Figure()
+            
+            fig.add_trace(go.Bar(
+                y=topic_data['topic'],
+                x=topic_data['count'],
+                orientation='h',
+                marker=dict(
+                    color=topic_data['count'],
+                    colorscale='Viridis',
+                    showscale=True,
+                    colorbar=dict(title="Article<br>Count")
+                ),
+                text=topic_data['count'],
+                textposition='outside',
+                hovertext=[
+                    f"<b>{topic}</b><br>Articles: {count}<br>Percentage: {pct}%"
+                    for topic, count, pct in zip(topic_data['topic'], topic_data['count'], topic_data['percentage'])
+                ],
+                hoverinfo='text'
+            ))
+            
+            # Update layout for a cleaner bar chart appearance
+            fig.update_layout(
+                title="Topic Distribution - Article Count by Domain",
+                xaxis_title="Number of Articles",
+                yaxis_title="Topic Domain",
+                plot_bgcolor='rgba(240, 240, 240, 0.5)',
+                hovermode='closest',
+                height=600,
+                showlegend=False
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # --- Topic Breakdown Table --- #
+            st.subheader("Topic Breakdown")
+            topic_display = topic_data[['topic', 'count', 'percentage']].copy()
+            topic_display.columns = ['Topic', 'Count', 'Percentage (%)']
+            topic_display = topic_display.sort_values('Count', ascending=False).reset_index(drop=True)
+            st.dataframe(topic_display, use_container_width=True)
+        else:
+            st.info("No topics available for the selected date range.")
     else:
-        st.info("No data to display for the selected filters.")
-
-    st.subheader("Topic Distribution")
-    if not filtered_df.empty:
-        topic_counts = filtered_df['topic'].value_counts().reset_index()
-        topic_counts.columns = ['Topic', 'Count']
-        fig_topics = px.bar(topic_counts, x='Topic', y='Count', title='Distribution of Consolidated Topics')
-        st.plotly_chart(fig_topics, use_container_width=True)
-
-        llm_topic_counts = filtered_df['llm_generated_topic'].value_counts().reset_index()
-        llm_topic_counts.columns = ['LLM Generated Topic', 'Count']
-        fig_llm_topics = px.bar(llm_topic_counts, x='LLM Generated Topic', y='Count', title='Distribution of LLM Generated Topics')
-        st.plotly_chart(fig_llm_topics, use_container_width=True)
-    else:
-        st.info("No data to display for topic distribution.")
-
-
+        st.info("No classified articles found for the selected date range. Please ensure topics are assigned in your data.")

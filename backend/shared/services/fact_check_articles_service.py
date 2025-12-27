@@ -5,9 +5,10 @@ import datetime
 project_root = str(Path(__file__).parent.parent)
 sys.path.append(project_root)
 
-from shared.schemas import FactCheckArticlesSchema
+from shared.schemas import FactCheckArticlesSchema, TopicCount
 from shared.models import FactCheckArticles
 from typing import List, Dict, Any, Optional
+from sqlalchemy import func
 
 
 class FactCheckArticlesService:
@@ -86,6 +87,30 @@ class FactCheckArticlesService:
         article_objs = [FactCheckArticles(**article.model_dump(exclude_unset=True)) for article in new_articles]
         self.db_session.bulk_save_objects(article_objs)
         self.db_session.commit()
+
+
+    def get_topic_counts_by_period(
+        self,
+        published_after: Optional[datetime.datetime] = None,
+        published_before: Optional[datetime.datetime] = None,
+        medium: Optional[str] = None
+    ) -> List[TopicCount]:
+        '''
+        Retrieve a list of topic counts for a given time period and optional medium.
+        Returns topics and their article counts, sorted by count descending.
+        '''
+        query = self.db_session.query(FactCheckArticles.topic, func.count(FactCheckArticles.id))
+        if published_after:
+            query = query.filter(FactCheckArticles.published_at >= published_after)
+        if published_before:
+            query = query.filter(FactCheckArticles.published_at <= published_before)
+        if medium:
+            query = query.filter(FactCheckArticles.medium == medium)
+        query = query.filter(FactCheckArticles.topic.isnot(None))
+        query = query.group_by(FactCheckArticles.topic)
+        query = query.order_by(func.count(FactCheckArticles.id).desc())
+        results = query.all()
+        return [TopicCount(topic=topic, count=count) for topic, count in results]
 
 
     def get_missing_urls(self, urls: List[str]) -> List[str]:

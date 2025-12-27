@@ -3,6 +3,10 @@ from typing import List, Optional, Dict, Any, Literal, Union
 import datetime
 
 
+##########################
+## Data and LLM Schemas ##
+##########################
+
 class ParagraphBlock(BaseModel):
     type: Literal['paragraph']
     text: str
@@ -98,3 +102,15 @@ class Topic(BaseModel):
         'Wirtschaft & Soziales',
         'Verbraucherthemen'
     ]
+
+
+##################
+## API Schemas ##
+##################
+
+class TopicCount(BaseModel):
+    '''
+    Schema for returning topic counts via API.
+    '''
+    topic: str
+    count: int

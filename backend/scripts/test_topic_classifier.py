@@ -61,4 +61,3 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     asyncio.run(classify_article_cli(article_id=args.article_id, model_name=args.model_name))
-
