@@ -1,0 +1,19 @@
+{
+  "canisters": {
+    "frontend_frontend": {
+      "source": [
+        "src/frontend_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "frontend_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
