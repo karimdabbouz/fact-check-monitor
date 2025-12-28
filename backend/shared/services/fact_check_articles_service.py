@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Optional
 from sqlalchemy import func
 
 
-class FactCheckArticlesService:
+class FactCheckArticlesService():
     '''
     Service for handling operations on the FactCheckArticles table.
     '''
