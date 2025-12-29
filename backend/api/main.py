@@ -9,6 +9,14 @@ import datetime
 app = FastAPI()
 db = Database()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get('/')
 def read_root():
     return {'message': 'Faktencheck-Aggregator API', 'version': '1.0'}
@@ -16,39 +24,41 @@ def read_root():
 
 @app.get('/topic-counts', response_model=List[TopicCount])
 def get_topic_counts(
-        published_after: Optional[datetime.datetime] = None,
-        published_before: Optional[datetime.datetime] = None,
+        published_after: Optional[str] = None,
+        published_before: Optional[str] = None,
         medium: Optional[str] = None
     ) -> List[TopicCount]:
     '''
-    TODO
     Retrieve a list of topic counts for a given time period and optional medium.
+    Query parameters:
+    - published_after: Date in YYYY-MM-DD format (optional)
+    - published_before: Date in YYYY-MM-DD format (optional)
+    - medium: Fact-checking medium filter (optional)
     '''
     with db.get_session() as session:
         service = FactCheckArticlesService(session)
+        
+        # Convert date strings to datetime objects
+        published_after_dt = None
+        published_before_dt = None
+        
+        if published_after:
+            try:
+                published_after_dt = datetime.datetime.strptime(published_after, '%Y-%m-%d')
+            except ValueError:
+                pass
+        
+        if published_before:
+            try:
+                published_before_dt = datetime.datetime.strptime(published_before, '%Y-%m-%d')
+                # Set to end of day
+                published_before_dt = published_before_dt.replace(hour=23, minute=59, second=59)
+            except ValueError:
+                pass
+        
         topic_counts = service.get_topic_counts_by_period(
-            published_after=published_after,
-            published_before=published_before,
+            published_after=published_after_dt,
+            published_before=published_before_dt,
             medium=medium
         )
         return topic_counts
-
-
-
-
-# @app.post('/users', response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-# def create_user(user_data: UserCreate):
-#     '''
-#     Creates a user entry in the user table using the e-mail address.
-#     Will use OAuth in production.
-#     '''
-#     with db.get_session() as session:
-#         existing = session.query(User).filter(User.email == user_data.email).first()
-#         if existing:
-#             raise HTTPException(status_code=400, detail='This email already exists')
-
-#         user = User(email = user_data.email)
-#         session.add(user)
-#         session.commit()
-#         session.refresh(user)
-#         return UserResponse.model_validate(user)
