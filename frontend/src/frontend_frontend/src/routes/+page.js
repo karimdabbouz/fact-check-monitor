@@ -1,4 +1,4 @@
-export const load = async ({ fetch, url }) => {
+export const load = async ({ fetch, url}) => {
     const getDateString = (date) => date.toISOString().split('T')[0];
     
     const published_before = url.searchParams.get('published_before') || getDateString(new Date());

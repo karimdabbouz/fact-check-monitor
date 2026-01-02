@@ -1,1 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 @import "tailwindcss";
+
+
+* {
+    font-family: 'Space Grotesk', sans-serif;
+    color: #310000;
+}
+
+
+.date-selector {
+    border: 2px solid #310000;
+    border-radius: 100px;
+}
+
+.medium-selector {
+    border: 2px solid #310000;
+    border-radius: 100px;
+}

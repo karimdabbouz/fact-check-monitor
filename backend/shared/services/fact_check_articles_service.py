@@ -69,7 +69,8 @@ class FactCheckArticlesService():
             query = query.filter(FactCheckArticles.published_at >= published_after)
         if published_before:
             query = query.filter(FactCheckArticles.published_at <= published_before)
-        return query.order_by(FactCheckArticles.id).offset(offset).limit(limit).all()
+        articles = query.order_by(FactCheckArticles.id).offset(offset).limit(limit).all()
+        return [FactCheckArticlesSchema.from_orm(article) for article in articles]
 
 
     def save_articles(self, articles: List[FactCheckArticlesSchema]):

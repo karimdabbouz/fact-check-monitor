@@ -1,43 +1,28 @@
 <script>
     import * as d3 from 'd3';
-    import { goto } from '$app/navigation';
-
-    export let topicCounts;
-    export let published_after;
-    export let published_before;
-    export let medium;
 
     let svgElement;
     let width;
     let height;
 
-    const topicColors = {
-        'Migration': '#FF7A6B',
-        'Demokratie & Wahlen': '#E6C6A8',
-        'Politik & Regierung': '#9FC3A1',
-        'Medien & Öffentlichkeit': '#FBA47E',
-        'Umwelt & Klima': '#C3C77A',
-        'Gesundheit': '#B3A1C8',
-        'Krieg & Konflikte': '#FF9A9A',
-        'Kriminalität & Sicherheit': '#E8C96A',
-        'Technologie': '#8FA8C8',
-        'Wirtschaft & Soziales': '#7FB7B2',
-        'Verbraucherthemen': '#F6B58E'
-    };
+    const colors = ['#FF7A6B', '#E6C6A8', '#9FC3A1', '#FBA47E', '#C3C77A', '#B3A1C8', '#FF9A9A', '#E8C96A', '#8FA8C8', '#7FB7B2', '#F6B58E'];
 
-    const navigateToTopicPage = (topic) => {
-        const urlParams = new URLSearchParams();
-        if (published_after) urlParams.append('published_after', published_after);
-        if (published_before) urlParams.append('published_before', published_before);
-        if (medium) urlParams.append('medium', medium);
-        goto(`/topic/${topic}?${urlParams.toString()}`);
-    };
+    const dummyClaims = [
+        'Die Impfung wurde zu schnell entwickelt und ist daher nicht sicher.',
+        'Elektroautos sind umweltschädlicher als Benzinfahrzeuge.',
+        'Migration verursacht wirtschaftliche Instabilität.',
+        'Der Klimawandel ist nicht menschengemacht.',
+        'Globale Eliten kontrollieren die Regierungen der Welt.',
+        'Armutsbekämpfung ist der wichtigste Zweck von Sozialprogrammen.',
+        'Künstliche Intelligenz wird alle Arbeitsplätze ersetzen.',
+        'Die Medien berichten nicht wahrheitsgetreu über Krisen.',
+        'Erneuerbare Energien können fossil fuels vollständig ersetzen.',
+        'Wirtschaftsungleichheit schadet dem sozialen Zusammenhalt.',
+        'Technologie-Großkonzerne haben zu viel Macht in der Gesellschaft.'
+    ];
 
     const drawChart = () => {
-        if (!svgElement || topicCounts.length === 0) {
-            d3.select(svgElement).remove();
-            return;
-        }
+        if (!svgElement) return;
 
         const container = svgElement.parentElement;
         width = container.clientWidth;
@@ -57,25 +42,20 @@
             .attr('class', 'bubble-wrapper')
             .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-        const data = topicCounts.map(d => ({
-            topic: d.topic,
-            count: d.count,
-            id: d.topic,
+        const data = dummyClaims.map((claim, i) => ({
+            claim: claim,
+            id: i,
             x: Math.random() * innerWidth,
             y: Math.random() * innerHeight
         }));
 
-        const maxCount = d3.max(data, d => d.count);
-        const minCount = d3.min(data, d => d.count);
-        const radiusScale = d3.scaleSqrt()
-            .domain([minCount, maxCount])
-            .range([innerWidth / 25, innerWidth / 12]);
+        const bubbleRadius = 120;
 
         const simulation = d3.forceSimulation(data)
             .force('forceX', d3.forceX(innerWidth / 2))
             .force('forceY', d3.forceY(innerHeight / 2))
             .force('charge', d3.forceManyBody().strength(-50))
-            .force('collision', d3.forceCollide(d => radiusScale(d.count) + 2));
+            .force('collision', d3.forceCollide(bubbleRadius + 2));
 
         // Drag Functions
         const dragstarted = (event, d) => {
@@ -92,7 +72,7 @@
         const dragended = (event, d) => {
             if (!event.active) simulation.alphaTarget(.03);
                 d.fx = null;
-                d.fy = null; // one of these makes the simulation stop and keep the nodes in the specific place
+                d.fy = null;
         }
 
         const node = chartGroup.selectAll('g.bubble')
@@ -104,7 +84,6 @@
                 .on('drag', dragged)
                 .on('end', dragended)
             )
-            .on('click', (event, d) => navigateToTopicPage(d.topic))
             .on('mouseenter', function() {
                 d3.select(this).raise();
                 d3.select(this).select('circle')
@@ -116,29 +95,31 @@
                 d3.select(this).select('circle')
                     .style('opacity', 0.7);
                 d3.select(this).select('text')
-                    .style('font-weight', 'bold');
+                    .style('font-weight', 'normal');
             });
 
         node.append('circle')
-            .attr('r', d => radiusScale(d.count))
-            .style('fill', d => topicColors[d.topic] || '#cccccc')
+            .attr('r', bubbleRadius)
+            .style('fill', (d, i) => colors[i % colors.length])
             .style('opacity', 0.7);
 
         node.append('text')
-            .text(d => d.topic)
-            .style('font-size', d => Math.max(8, radiusScale(d.count) / 3.5) + 'px')
-            .style('font-weight', 'bold')
+            .text(d => d.claim)
+            .style('font-size', '20px')
             .attr('fill', '#310000')
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'middle')
-            .style('pointer-events', 'none');
+            .style('pointer-events', 'none')
+            .attr('dy', '0.3em')
+            .attr('x', 0)
+            .attr('y', 0);
 
         simulation.on('tick', () => {
             node.attr('transform', d => `translate(${d.x}, ${d.y})`);
         });
     };
 
-    $: if (svgElement && topicCounts && topicCounts.length > 0) {
+    $: if (svgElement) {
         drawChart();
     };
 </script>
@@ -146,3 +127,4 @@
 <div class="w-full overflow-hidden">
     <svg bind:this={svgElement}></svg>
 </div>
+

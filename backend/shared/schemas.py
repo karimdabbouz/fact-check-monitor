@@ -63,6 +63,7 @@ class FactCheckArticlesSchema(BaseModel):
 
     class Config:
         extra = 'ignore'
+        from_attributes = True
 
 
 class FactCheckArticleContent(BaseModel):
